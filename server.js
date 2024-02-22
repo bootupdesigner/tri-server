@@ -12,7 +12,7 @@ app.use(cors());
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');
-});
+  });
 
 
 let transporter = nodemailer.createTransport({
@@ -35,14 +35,8 @@ transporter.verify((err, success) => {
 
 
 app.post("/send", function (req, res) {
-    const { name, email, message } = req.body.mailerState;
-
-    if (!name || !email || !message) {
-        return res.status(400).json({ error: 'Name, email, and message are required.' });
-    }
-
     const mailOptions = {
-        from: req.body.mailerState.email,
+        from: req.body.mailerState.email, 
         to: process.env.EMAIL,
         subject: `Message from: ${req.body.mailerState.email}`,
         text: req.body.mailerState.message,
@@ -50,10 +44,14 @@ app.post("/send", function (req, res) {
 
     transporter.sendMail(mailOptions, function (err, data) {
         if (err) {
-            return res.status(500).json({ status: "fail", error: err.message });
+            res.json({
+                status: "fail",
+            });
         } else {
             console.log("Email sent successfully");
-            return res.status(200).json({ status: "success" });
+            res.json({ 
+                status: "success"
+            });
         }
     });
 });
