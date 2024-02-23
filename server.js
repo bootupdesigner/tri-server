@@ -12,7 +12,7 @@ app.use(cors());
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');
-  });
+});
 
 
 let transporter = nodemailer.createTransport({
@@ -34,27 +34,38 @@ transporter.verify((err, success) => {
 });
 
 
-app.post("/send", function (req, res) {
-    const mailOptions = {
-        from: req.body.mailerState.email, 
-        to: process.env.EMAIL,
-        subject: `Message from: ${req.body.mailerState.email}`,
-        text: req.body.mailerState.message,
-    };
+app.post("/send", async function (req, res) {
+    try {
+        const firstMailOptions = {
+            from: req.body.mailerState.email,
+            to: process.env.EMAIL,
+            subject: `Message from: ${req.body.mailerState.email}`,
+            text: req.body.mailerState.message,
+        };
 
-    transporter.sendMail(mailOptions, function (err, data) {
-        if (err) {
-            res.json({
-                status: "fail",
-            });
-        } else {
-            console.log("Email sent successfully");
-            res.json({ 
-                status: "success"
-            });
-        }
-    });
+        await transporter.sendMail(firstMailOptions);
+
+        const secondMailOptions = {
+            from: process.env.EMAIL,  // Change this to the sender email address for the second email
+            to: 'shepardcurtis2@gmail.com',  // Change this to the recipient email address for the second email
+            subject: 'Subject of the second TRI',
+            text: 'Message body of the second email',
+        };
+
+        await transporter.sendMail(secondMailOptions);
+
+        console.log("Emails sent successfully");
+        res.json({
+            status: "success"
+        });
+    } catch (error) {
+        console.error('Error sending emails:', error);
+        res.json({
+            status: "fail",
+        });
+    }
 });
+
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
