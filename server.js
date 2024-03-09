@@ -40,6 +40,11 @@ transporter.verify((err, success) => {
 
 app.post("/send", async function (req, res) {
     try {
+
+        const selectedServices = req.body.mailerState.services
+            .filter(service => service.selected)
+            .map(service => service.name);
+
         const firstMailOptions = {
             from: req.body.mailerState.email,
             to: process.env.EMAIL,
@@ -58,10 +63,6 @@ app.post("/send", async function (req, res) {
         };
 
         await transporter.sendMail(firstMailOptions);
-
-        const selectedServices = req.body.mailerState.services
-            .filter(service => service.selected)
-            .map(service => service.name);
 
         const secondMailOptions = {
             from: process.env.EMAIL, 
