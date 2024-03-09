@@ -1,5 +1,9 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
+
+const handlebars = require('handlebars');
+const fs = require('fs');
+
 const cors = require('cors');
 require('dotenv').config();
 
@@ -39,17 +43,32 @@ app.post("/send", async function (req, res) {
         const firstMailOptions = {
             from: req.body.mailerState.email,
             to: process.env.EMAIL,
-            subject: `Message from: ${req.body.mailerState.email}`,
+            subject: `Message from TRI Financial Services`,
             text: req.body.mailerState.message,
+            html: `
+            <div>
+            <p>You've received a message from ${req.body.mailerState.name}</p>
+            <p>Message from customer: ${req.body.mailerState.message}</p>
+            <p>Customer selected services:</p>       
+            <ul>
+            ${selectedServices.map(service => `<li>${service}</li>`).join('')}
+
+            </ul>
+        </div>`
         };
 
         await transporter.sendMail(firstMailOptions);
 
+        const selectedServices = req.body.mailerState.services
+            .filter(service => service.selected)
+            .map(service => service.name);
+
         const secondMailOptions = {
-            from: process.env.EMAIL,  // Change this to the sender email address for the second email
-            to: 'shepardcurtis2@gmail.com',  // Change this to the recipient email address for the second email
-            subject: 'Subject of the second TRI',
-            text: 'Message body of the second email',
+            from: process.env.EMAIL, 
+            to: req.body.mailerState.email,  
+            subject: 'TRI Financial Services Response',
+            text: `Thanks for reaching us ${req.body.mailerState.name}. We'll be contacting you shortly`,
+           
         };
 
         await transporter.sendMail(secondMailOptions);
@@ -59,9 +78,11 @@ app.post("/send", async function (req, res) {
             status: "success"
         });
     } catch (error) {
-        console.error('Error sending emails:', error);
-        res.json({
+        console.error('Error submitting second email:', error);
+
+        res.status(500).json({
             status: "fail",
+            error: "Error sending the second email. Please try again later.",
         });
     }
 });
